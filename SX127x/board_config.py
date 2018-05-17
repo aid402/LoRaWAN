@@ -20,8 +20,7 @@
 # <http://www.gnu.org/licenses/>.
 
 
-import RPi.GPIO as GPIO
-import spidev
+from machine import Pin,SPI
 
 import time
 
@@ -31,25 +30,20 @@ class BOARD:
         This is the Raspberry Pi board with one LED and a modtronix inAir9B
     """
     # Note that the BCOM numbering for the GPIOs is used.
-    DIO0 = 22   # RaspPi GPIO 22
-    DIO1 = 23   # RaspPi GPIO 23
-    DIO2 = 24   # RaspPi GPIO 24
-    DIO3 = 25   # RaspPi GPIO 25
-    LED  = 18   # RaspPi GPIO 18 connects to the LED on the proto shield
-    SWITCH = 4  # RaspPi GPIO 4 connects to a switch
+    P_DIO0 = 5
+    P_DIO1 = 4
+    P_DIO2 = 24
+    P_DIO3 = 25
+    P_LED  = 2
+    P_SWITCH = 0
 
     # The spi object is kept here
     spi = None
 
     @staticmethod
     def setup():
-        """ Configure the Raspberry GPIOs
-        :rtype : None
-        """
-        GPIO.setmode(GPIO.BCM)
         # LED
-        GPIO.setup(BOARD.LED, GPIO.OUT)
-        GPIO.output(BOARD.LED, 0)
+        LED = Pin(BOARD.LED, Pin.OUT, value=0)
         # switch
         GPIO.setup(BOARD.SWITCH, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) 
         # DIOx
