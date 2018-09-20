@@ -32,8 +32,8 @@ class BOARD:
     # Note that the BCOM numbering for the GPIOs is used.
     P_DIO0 = 5
     P_DIO1 = 4
-    P_DIO2 = 24
-    P_DIO3 = 25
+    #P_DIO2 = 24
+    #P_DIO3 = 25
     P_LED  = 2
     P_SWITCH = 0
 
@@ -43,20 +43,19 @@ class BOARD:
     @staticmethod
     def setup():
         # LED
-        LED = Pin(BOARD.LED, Pin.OUT, value=0)
+        BOARD.LED = Pin(BOARD.P_LED, Pin.OUT, value=0)
         # switch
-        GPIO.setup(BOARD.SWITCH, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) 
+        BOARD.SWITCH = Pin(BOARD.P_SWITCH, Pin.IN, Pin.PULL_UP) 
         # DIOx
-        for gpio_pin in [BOARD.DIO0, BOARD.DIO1, BOARD.DIO2, BOARD.DIO3]:
-            GPIO.setup(gpio_pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+        BOARD.DIO0 = Pin(BOARD.P_DIO0, Pin.IN)
+        BOARD.DIO1 = Pin(BOARD.P_DIO1, Pin.IN)
         # blink 2 times to signal the board is set up
         BOARD.blink(.1, 2)
 
     @staticmethod
     def teardown():
         """ Cleanup GPIO and SpiDev """
-        GPIO.cleanup()
-        BOARD.spi.close()
+        BOARD.spi.deinit()
 
     @staticmethod
     def SpiDev(spi_bus=0, spi_cs=0):
@@ -66,9 +65,7 @@ class BOARD:
         :param spi_cs: The RPi SPI chip select to use: 0 or 1
         :rtype: SpiDev
         """
-        BOARD.spi = spidev.SpiDev()
-        BOARD.spi.open(spi_bus, spi_cs)
-        return BOARD.spi
+        return BOARD.spi(1,baudrate=1000000)
 
     @staticmethod
     def add_event_detect(dio_number, callback):
@@ -77,44 +74,25 @@ class BOARD:
         :param callback: The function to call when the DIO triggers an IRQ.
         :return: None
         """
-        GPIO.add_event_detect(dio_number, GPIO.RISING, callback=callback)
+        dio_number.irq(trigger=Pin.IRQ_RISING, handler=callback)
 
     @staticmethod
-    def add_events(cb_dio0, cb_dio1, cb_dio2, cb_dio3, cb_dio4, cb_dio5, switch_cb=None):
-        BOARD.add_event_detect(BOARD.DIO0, callback=cb_dio0)
-        BOARD.add_event_detect(BOARD.DIO1, callback=cb_dio1)
-        BOARD.add_event_detect(BOARD.DIO2, callback=cb_dio2)
-        BOARD.add_event_detect(BOARD.DIO3, callback=cb_dio3)
+    def add_events(cb_dio0, cb_dio1, switch_cb=None):
+        BOARD.add_event_detect(BOARD.DIO0, cb_dio0)
+        BOARD.add_event_detect(BOARD.DIO1, cb_dio1)
+
         # the modtronix inAir9B does not expose DIO4 and DIO5
         if switch_cb is not None:
-            GPIO.add_event_detect(BOARD.SWITCH, GPIO.RISING, callback=switch_cb, bouncetime=300)
-
-    @staticmethod
-    def led_on(value=1):
-        """ Switch the proto shields LED
-        :param value: 0/1 for off/on. Default is 1.
-        :return: value
-        :rtype : int
-        """
-        GPIO.output(BOARD.LED, value)
-        return value
-
-    @staticmethod
-    def led_off():
-        """ Switch LED off
-        :return: 0
-        """
-        GPIO.output(BOARD.LED, 0)
-        return 0
+            BOARD.add_event_detect(BOARD.SWITCH, switch_cb)
 
     @staticmethod
     def blink(time_sec, n_blink):
         if n_blink == 0:
             return
-        BOARD.led_on()
+        BOARD.LED.on()
         for i in range(n_blink):
             time.sleep(time_sec)
-            BOARD.led_off()
+            BOARD.LED.off()
             time.sleep(time_sec)
-            BOARD.led_on()
-        BOARD.led_off()
+            BOARD.LED.on()
+        BOARD.LED.off()
