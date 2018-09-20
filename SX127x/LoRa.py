@@ -86,12 +86,12 @@ class LoRa(object):
         
         Send the device to sleep, read all registers, and do the calibration (if do_calibration=True)
         :param verbose: Set the verbosity True/False
-        :param calibration_freq: call rx_chain_calibration with this parameter. Default is 868
+        :param calibration_freq: call rx_chain_calibration with this parameter. Default is 923
         :param do_calibration: Call rx_chain_calibration, default is True.
         """
         self.verbose = verbose
         # set the callbacks for DIO0..5 IRQs.
-        BOARD.add_events(self._dio0, self._dio1, self._dio2, self._dio3, self._dio4, self._dio5)
+        BOARD.add_events(self._dio0, self._dio1)
         # set mode to sleep and read all registers
         self.set_mode(MODE.SLEEP)
         self.backup_registers = self.get_all_registers()
